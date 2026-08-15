@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://joseliojoao02-spec.github.io/Aurora/sitemap.xml
