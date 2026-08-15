@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://auroracommunityao.github.io/AC/sitemap.xml
