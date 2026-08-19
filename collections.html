@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Coleções da Aurora Flowers — conteúdos que florescem com a comunidade.">
+    <title>Coleções — Aurora Flowers</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="collections-page">
+    <div class="glow-orb glow-left"></div>
+    <div class="glow-orb glow-right"></div>
+
+    <header class="site-header">
+        <div class="header-container">
+            <a href="index.html" class="brand-link">
+                <img src="assets/logo-icon.png" alt="Aurora Community" class="brand-logo">
+                <span class="brand-title">Aurora Flowers</span>
+            </a>
+            <nav class="header-nav" aria-label="Navegação principal">
+                <a href="index.html" class="nav-link">Início</a>
+                <a href="flowers.html" class="nav-link">Flowers</a>
+                <a href="collections.html" class="nav-link active" aria-current="page">Coleções</a>
+                <a href="project.html" class="nav-link">Project</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="collection-hero section">
+            <div class="section-container collection-hero-grid">
+                <div class="collection-hero-copy">
+                    <span class="section-tag">Aurora Flowers · Biblioteca viva</span>
+                    <h1 class="hero-title">Coleções que florescem connosco.</h1>
+                    <p class="hero-subtitle">Um espaço para reunir as séries, rubricas e momentos que dão forma à nossa comunidade — com tempo, intenção e beleza.</p>
+                    <div class="cta-container collection-hero-actions">
+                        <a href="#catalogo" class="btn btn-purple">Explorar coleções <span aria-hidden="true">↓</span></a>
+                        <a href="gestao.html" class="text-link">Abrir Gestão <span aria-hidden="true">↗</span></a>
+                    </div>
+                </div>
+                <div class="milestone-card" aria-label="Celebração dos 100 seguidores">
+                    <div class="milestone-image-wrap">
+                        <img src="assets/aurora-100-followers.jpeg" alt="Aurora Flowers celebra 100 seguidores" class="milestone-image">
+                    </div>
+                    <div class="milestone-content">
+                        <span class="milestone-kicker">Um marco partilhado</span>
+                        <strong class="milestone-number">100</strong>
+                        <p>seguidores a caminhar com a Aurora.</p>
+                        <span class="milestone-note">Obrigado pelo apoio e pela confiança.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section section-purple milestone-banner">
+            <div class="section-container milestone-banner-inner">
+                <div>
+                    <span class="section-tag">100 seguidores</span>
+                    <h2 class="section-title">Juntos, continuamos a crescer.</h2>
+                    <p class="section-desc">Esta celebração é de toda a comunidade. As coleções abaixo guardam os temas e as palavras que nos aproximam, uma publicação de cada vez.</p>
+                </div>
+                <a href="https://whatsapp.com/channel/0029Vb3EUn8LSmbeaiULOk0B" target="_blank" rel="noopener noreferrer" class="btn btn-green">Acompanhar no WhatsApp <span aria-hidden="true">↗</span></a>
+            </div>
+        </section>
+
+        <section id="catalogo" class="section">
+            <div class="section-container">
+                <div class="section-heading-row">
+                    <div>
+                        <span class="section-tag">Arquivo Aurora</span>
+                        <h2 class="section-title">As nossas coleções</h2>
+                    </div>
+                    <span id="collection-count" class="result-count" aria-live="polite">A carregar…</span>
+                </div>
+                <p class="section-desc">Descubra as coleções publicadas pela Aurora Flowers. Pesquise por tema ou escolha uma categoria.</p>
+
+                <div class="collection-toolbar" role="search">
+                    <label class="search-field">
+                        <span class="sr-only">Pesquisar coleções</span>
+                        <input id="collection-search" type="search" placeholder="Pesquisar por título ou descrição…" autocomplete="off">
+                    </label>
+                    <label class="filter-field">
+                        <span class="sr-only">Filtrar por categoria</span>
+                        <select id="collection-category">
+                            <option value="">Todas as categorias</option>
+                        </select>
+                    </label>
+                </div>
+
+                <div id="collections-grid" class="collections-grid" aria-live="polite"></div>
+                <div id="collections-empty" class="empty-state" hidden>
+                    <span class="empty-state-mark">✦</span>
+                    <h3>Ainda estamos a preparar esta página.</h3>
+                    <p>As próximas coleções da Aurora Flowers aparecerão aqui assim que forem publicadas.</p>
+                    <a href="gestao.html" class="text-link">Abrir a Gestão para publicar <span aria-hidden="true">↗</span></a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <img src="assets/logo-icon.png" alt="Aurora Community" class="footer-logo">
+                <span class="footer-title">Aurora Flowers</span>
+            </div>
+            <p class="footer-disclaimer">© 2026 Aurora Flowers. Parte integrante da Aurora Community.</p>
+            <div class="footer-links">
+                <a href="index.html">Início</a>
+                <a href="flowers.html">Flowers</a>
+                <a href="collections.html">Coleções</a>
+                <a href="project.html">Project</a>
+            </div>
+        </div>
+    </footer>
+    <script src="collections.js"></script>
+</body>
+</html>
+
