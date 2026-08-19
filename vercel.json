@@ -1,7 +1,12 @@
 {
   "version": 2,
-  "builds": [],
+  "functions": {
+    "api/gestao-auth.js": {
+      "runtime": "nodejs20.x"
+    }
+  },
   "routes": [
+    { "src": "/gestão", "dest": "/gestao.html" },
     { "handle": "filesystem" }
   ]
 }

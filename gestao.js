@@ -1,5 +1,4 @@
 const COLLECTIONS_KEY = 'aurora-flowers-collections-v1';
-const ACCESS_KEY = 'aurora-flowers-owner-access-v1';
 const MAX_IMAGE_SIZE = 2.5 * 1024 * 1024;
 
 const DEFAULT_COLLECTIONS = [];
@@ -29,15 +28,6 @@ function showMessage(message, type = '') {
   target.className = `form-message ${type}`;
   window.clearTimeout(showMessage.timer);
   showMessage.timer = window.setTimeout(() => { target.textContent = ''; target.className = 'form-message'; }, 5000);
-}
-
-async function hashText(value) {
-  if (window.crypto?.subtle) {
-    const bytes = new TextEncoder().encode(value);
-    const digest = await window.crypto.subtle.digest('SHA-256', bytes);
-    return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
-  }
-  return window.btoa(unescape(encodeURIComponent(value)));
 }
 
 function isValidCollection(collection) {
@@ -231,29 +221,34 @@ async function setupAccess() {
   const gate = $('#access-gate');
   const content = $('#management-content');
   const form = $('#access-form');
-  const savedHash = localStorage.getItem(ACCESS_KEY);
-  const sessionHash = sessionStorage.getItem(ACCESS_KEY);
-  if (savedHash && sessionHash === savedHash) { gate.hidden = true; content.hidden = false; renderList(); }
+  const message = $('#access-message');
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
-    const code = $('#access-code').value;
-    const hash = await hashText(code);
-    if (!savedHash) {
-      localStorage.setItem(ACCESS_KEY, hash);
-      sessionStorage.setItem(ACCESS_KEY, hash);
-      gate.hidden = true; content.hidden = false; renderList();
-      return;
+    const token = $('#access-token').value;
+    message.textContent = 'A validar token…';
+    message.className = 'form-message';
+    try {
+      const response = await fetch('/api/gestao-auth', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result.ok) throw new Error(result.error || 'Não foi possível validar o token.');
+      form.reset();
+      gate.hidden = true;
+      content.hidden = false;
+      renderList();
+    } catch (error) {
+      message.textContent = error.message;
+      message.className = 'form-message error';
     }
-    if (hash !== savedHash) { $('#access-message').textContent = 'Código incorrecto. Tente novamente.'; $('#access-message').className = 'form-message error'; return; }
-    sessionStorage.setItem(ACCESS_KEY, hash);
-    gate.hidden = true; content.hidden = false; renderList();
   });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   setupAccess();
   $('#new-collection')?.addEventListener('click', () => openEditor());
-  $('#logout')?.addEventListener('click', () => { sessionStorage.removeItem(ACCESS_KEY); window.location.reload(); });
+  $('#logout')?.addEventListener('click', () => window.location.reload());
   $('#management-search')?.addEventListener('input', renderList);
   $('#management-status')?.addEventListener('change', renderList);
   $('#management-list')?.addEventListener('click', handleListAction);
