@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Gestão de coleções da Aurora Flowers.">
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <title>Gestão — Aurora Flowers</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body class="management-page">
+    <div class="glow-orb glow-left"></div>
+    <div class="glow-orb glow-right"></div>
+
+    <header class="site-header">
+        <div class="header-container">
+            <a href="../gestao/" class="brand-link">
+                <img src="../assets/logo-icon.png" alt="Aurora Community" class="brand-logo">
+                <span class="brand-title">Gestão Aurora</span>
+            </a>
+            <nav class="header-nav" aria-label="Navegação da Gestão">
+                <a href="../gestao/" class="nav-link">Gestão</a>
+                <a href="../flowers.html" class="nav-link">Flowers</a>
+                <a href="../index.html" class="nav-link">Início</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="management-main">
+        <section class="section management-intro">
+            <div class="section-container">
+                <div class="management-intro-row">
+                    <div>
+                        <span class="section-tag">Área do proprietário</span>
+                        <h1 class="section-title">Gestão do projecto</h1>
+                        <p class="section-desc">Organize as coleções da Aurora Flowers sem editar o código. Crie, reveja, publique ou arquive conteúdos e descarregue um índice pronto para integrar no repositório.</p>
+                    </div>
+                    <div class="management-milestone">
+                        <span class="milestone-kicker">Marco da comunidade</span>
+                        <strong>100</strong>
+                        <span>seguidores</span>
+                    </div>
+                </div>
+                <div class="local-mode-notice" role="note">
+                    <strong>Acesso protegido por token.</strong> A Gestão só fica disponível através de <code>/gestão</code>. No GitHub Pages, o token GitHub é usado apenas durante esta sessão, não é guardado no código, no URL nem no armazenamento local.
+                </div>
+            </div>
+        </section>
+
+        <section class="section management-workspace">
+            <div class="section-container">
+                <div id="access-gate" class="access-gate">
+                    <div class="access-gate-icon">✦</div>
+                    <span class="section-tag">Acesso do proprietário</span>
+                    <h2 class="section-title">Entrar na Gestão</h2>
+                    <p class="section-desc">Introduza o token GitHub de granularidade fina com acesso ao repositório Aurora. A credencial fica apenas em memória nesta sessão e é enviada directamente para a API oficial do GitHub através de HTTPS.</p>
+                    <form id="access-form" class="access-form">
+                        <label for="access-token">Token GitHub de granularidade fina</label>
+                        <input id="access-token" type="password" minlength="1" required autocomplete="off" placeholder="ghp_… ou github_pat_…">
+                        <button class="btn btn-purple" type="submit">Testar e entrar</button>
+                        <p id="access-message" class="form-message" role="status"></p>
+                    </form>
+                </div>
+
+                <div id="management-content" hidden>
+                    <div class="management-toolbar">
+                        <div>
+                            <span class="section-tag">Conteúdo</span>
+                            <h2 class="section-title">Coleções publicadas</h2>
+                        </div>
+                        <div class="management-actions">
+                            <button id="new-collection" type="button" class="btn btn-green">Nova coleção <span aria-hidden="true">＋</span></button>
+                            <button id="logout" type="button" class="btn btn-quiet">Bloquear</button>
+                        </div>
+                    </div>
+
+                    <div class="management-stats" aria-label="Resumo das coleções">
+                        <div class="stat-card"><span>Total</span><strong id="stat-total">0</strong></div>
+                        <div class="stat-card"><span>Publicadas</span><strong id="stat-published">0</strong></div>
+                        <div class="stat-card"><span>Arquivadas</span><strong id="stat-archived">0</strong></div>
+                    </div>
+
+                    <div class="management-list-toolbar">
+                        <label class="search-field"><span class="sr-only">Pesquisar no inventário</span><input id="management-search" type="search" placeholder="Pesquisar no inventário…"></label>
+                        <select id="management-status" aria-label="Filtrar por estado"><option value="all">Todos os estados</option><option value="published">Publicadas</option><option value="archived">Arquivadas</option></select>
+                        <div class="file-actions"><button id="export-data" type="button" class="btn btn-quiet">Exportar JSON</button><label class="btn btn-quiet file-button">Importar JSON<input id="import-data" type="file" accept="application/json,.json" hidden></label></div>
+                    </div>
+                    <p id="management-message" class="form-message" role="status"></p>
+                    <div id="management-list" class="management-list"></div>
+
+                    <section class="file-workspace" aria-labelledby="file-workspace-title">
+                        <div class="workspace-heading">
+                            <div>
+                                <span class="section-tag">Publicação GitHub</span>
+                                <h2 id="file-workspace-title" class="section-title">Ficheiros do projecto</h2>
+                                <p class="section-desc">Leia, edite, gere e publique ficheiros no repositório Aurora sem expor o token GitHub no navegador.</p>
+                            </div>
+                            <span id="github-repository-status" class="workspace-status">Integração por configurar</span>
+                        </div>
+                        <div class="file-workspace-grid">
+                            <div class="repository-panel">
+                                <div class="panel-heading"><h3>Inventário</h3><button id="refresh-files" type="button" class="btn btn-quiet">Actualizar</button></div>
+                                <label class="search-field"><span class="sr-only">Pesquisar ficheiros</span><input id="file-search" type="search" placeholder="Pesquisar ficheiros…"></label>
+                                <div id="repository-file-list" class="repository-file-list"><p class="workspace-empty">Autentique-se e actualize para carregar os ficheiros.</p></div>
+                            </div>
+                            <div class="file-editor-panel">
+                                <div class="panel-heading"><h3 id="file-editor-title">Novo ficheiro</h3><span id="file-editor-state" class="workspace-status">Rascunho</span></div>
+                                <div class="form-grid">
+                                    <label>Caminho <input id="file-path" type="text" placeholder="Ex.: content/colecoes.json" spellcheck="false"></label>
+                                    <label>Mensagem do commit <input id="file-commit-message" type="text" placeholder="Ex.: actualizar colecções"></label>
+                                </div>
+                                <label>Conteúdo <textarea id="file-content" class="code-editor" rows="18" spellcheck="false" placeholder="Escreva ou carregue o conteúdo do ficheiro…"></textarea></label>
+                                <div class="file-editor-actions">
+                                    <label class="btn btn-quiet file-button">Carregar ficheiro<input id="upload-project-file" type="file" hidden></label>
+                                    <button id="new-project-file" type="button" class="btn btn-quiet">Limpar</button>
+                                    <button id="generate-collections-file" type="button" class="btn btn-quiet">Gerar índice</button>
+                                    <button id="download-project-file" type="button" class="btn btn-quiet">Descarregar</button>
+                                    <button id="save-project-file" type="button" class="btn btn-green">Enviar para GitHub</button>
+                                </div>
+                                <p id="file-workspace-message" class="form-message" role="status"></p>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="collection-modal" class="modal" hidden>
+        <div class="modal-backdrop" data-close-modal></div>
+        <section class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <div class="modal-header">
+                <div><span class="section-tag">Editor de conteúdo</span><h2 id="modal-title" class="section-title">Nova coleção</h2></div>
+                <button type="button" class="modal-close" data-close-modal aria-label="Fechar editor">×</button>
+            </div>
+            <form id="collection-form" class="collection-form">
+                <input id="collection-id" type="hidden">
+                <div class="form-grid">
+                    <label>Título <input id="collection-title" type="text" required maxlength="80" placeholder="Ex.: Flores de Romance"></label>
+                    <label>Categoria <input id="collection-category-input" type="text" required maxlength="40" placeholder="Ex.: Filosofia"></label>
+                </div>
+                <label>Descrição <textarea id="collection-description" required maxlength="240" rows="4" placeholder="Descreva o propósito desta coleção."></textarea></label>
+                <div class="form-grid">
+                    <label>Ligação externa <input id="collection-url" type="url" placeholder="https://…"></label>
+                    <label>Ordem de apresentação <input id="collection-order" type="number" min="0" step="1" value="1"></label>
+                </div>
+                <label>Capa da coleção <input id="collection-cover" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"></label>
+                <p class="field-help">Imagens JPG, PNG, WEBP, GIF ou SVG até 2,5 MB. A capa fica guardada localmente neste navegador.</p>
+                <div id="current-cover" class="current-cover" hidden></div>
+                <div class="form-actions"><button type="button" class="btn btn-quiet" data-close-modal>Cancelar</button><button type="submit" class="btn btn-green">Guardar coleção</button></div>
+                <p id="form-message" class="form-message" role="status"></p>
+            </form>
+        </section>
+    </div>
+    <script src="../gestao.js"></script>
+</body>
+</html>
