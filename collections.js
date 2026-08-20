@@ -1,15 +1,16 @@
-const COLLECTIONS_KEY = 'aurora-flowers-collections-v1';
-
+const PUBLIC_COLLECTIONS_FILE = 'content/colecoes.json';
 const DEFAULT_COLLECTIONS = [];
+let publicCollections = [];
+let publicCollectionsLoadError = '';
+
+function publicCollectionsUrl() {
+  const url = new URL(PUBLIC_COLLECTIONS_FILE, document.baseURI);
+  url.searchParams.set('v', Date.now().toString());
+  return url.href;
+}
 
 function readCollections() {
-  try {
-    const stored = localStorage.getItem(COLLECTIONS_KEY);
-    return stored ? JSON.parse(stored) : DEFAULT_COLLECTIONS;
-  } catch (error) {
-    console.warn('Não foi possível ler as coleções guardadas.', error);
-    return DEFAULT_COLLECTIONS;
-  }
+  return Array.isArray(publicCollections) ? publicCollections : DEFAULT_COLLECTIONS;
 }
 
 function escapeHtml(value = '') {
@@ -56,18 +57,39 @@ function renderCollections() {
   const shouldShowEmpty = filtered.length === 0;
   emptyState.hidden = !shouldShowEmpty;
   grid.hidden = shouldShowEmpty;
-  if (shouldShowEmpty && (term || selectedCategory)) {
-    emptyState.querySelector('h3').textContent = 'Não encontrámos essa coleção.';
-    emptyState.querySelector('p').textContent = 'Tente ajustar a pesquisa ou escolher outra categoria.';
+  const heading = emptyState.querySelector('h3');
+  const description = emptyState.querySelector('p');
+  if (publicCollectionsLoadError) {
+    heading.textContent = 'Não foi possível carregar as coleções.';
+    description.textContent = publicCollectionsLoadError;
+  } else if (shouldShowEmpty && (term || selectedCategory)) {
+    heading.textContent = 'Não encontrámos essa coleção.';
+    description.textContent = 'Tente ajustar a pesquisa ou escolher outra categoria.';
   } else if (shouldShowEmpty) {
-    emptyState.querySelector('h3').textContent = 'Ainda estamos a preparar esta página.';
-    emptyState.querySelector('p').textContent = 'As próximas coleções da Aurora Flowers aparecerão aqui assim que forem publicadas.';
+    heading.textContent = 'Ainda estamos a preparar esta página.';
+    description.textContent = 'As próximas coleções da Aurora Flowers aparecerão aqui assim que forem publicadas.';
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+async function loadPublicCollections() {
+  publicCollectionsLoadError = '';
+  try {
+    const response = await fetch(publicCollectionsUrl(), { cache: 'no-store', headers: { Accept: 'application/json' } });
+    if (!response.ok) throw new Error(`O ficheiro público respondeu com HTTP ${response.status}.`);
+    const payload = await response.json();
+    const items = Array.isArray(payload) ? payload : payload.collections;
+    if (!Array.isArray(items)) throw new Error('O ficheiro público não contém uma lista válida de coleções.');
+    publicCollections = items;
+  } catch (error) {
+    publicCollections = [];
+    publicCollectionsLoadError = 'Tente novamente mais tarde. A equipa Aurora está a actualizar o catálogo.';
+    console.error('Falha ao carregar as coleções públicas:', error);
+  }
   renderCollections();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadPublicCollections();
   document.querySelector('#collection-search')?.addEventListener('input', renderCollections);
   document.querySelector('#collection-category')?.addEventListener('change', renderCollections);
-  window.addEventListener('storage', renderCollections);
 });

@@ -9,6 +9,7 @@ let repositoryFiles = [];
 let currentFilePath = '';
 let currentFileSha = '';
 const GITHUB_REPOSITORY = { owner: 'auroracommunityAO', repo: 'AC', branch: 'main' };
+const PUBLIC_COLLECTIONS_FILE = 'content/colecoes.json';
 const normalize = (value = '') => String(value).trim().toLocaleLowerCase('pt-PT').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 const uid = () => `collection-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
@@ -151,17 +152,18 @@ async function handleCollectionSubmit(event) {
     const selectedFile = $('#collection-cover').files[0];
     if (selectedFile) candidate.cover = await readCover(selectedFile);
     const next = existing ? current.map((item) => item.id === id ? candidate : item) : [...current, candidate];
+    await publishSharedCollections(next, existing ? 'fix: actualizar coleção Aurora' : 'feat: publicar coleção Aurora');
     saveCollections(next);
     closeEditor();
     renderList();
-    showMessage(existing ? 'Coleção actualizada e publicada localmente.' : 'Coleção criada e publicada localmente.', 'success');
+    showMessage(existing ? 'Coleção actualizada e visível para todos.' : 'Coleção criada e visível para todos.', 'success');
   } catch (error) {
     message.textContent = error.message;
     message.className = 'form-message error';
   }
 }
 
-function handleListAction(event) {
+async function handleListAction(event) {
   const editId = event.target.dataset.edit;
   const toggleId = event.target.dataset.toggle;
   const deleteId = event.target.dataset.delete;
@@ -171,16 +173,28 @@ function handleListAction(event) {
     const item = collections.find((entry) => entry.id === toggleId);
     if (!item) return;
     const nextStatus = item.status === 'published' ? 'archived' : 'published';
-    saveCollections(collections.map((entry) => entry.id === toggleId ? { ...entry, status: nextStatus, updatedAt: new Date().toISOString() } : entry));
-    renderList();
-    showMessage(nextStatus === 'published' ? 'Coleção publicada.' : 'Coleção arquivada.', 'success');
+    const next = collections.map((entry) => entry.id === toggleId ? { ...entry, status: nextStatus, updatedAt: new Date().toISOString() } : entry);
+    try {
+      await publishSharedCollections(next, nextStatus === 'published' ? 'feat: publicar coleção Aurora' : 'chore: arquivar coleção Aurora');
+      saveCollections(next);
+      renderList();
+      showMessage(nextStatus === 'published' ? 'Coleção publicada e visível para todos.' : 'Coleção arquivada para todos.', 'success');
+    } catch (error) {
+      showMessage(error.message, 'error');
+    }
   }
   if (deleteId) {
     const item = collections.find((entry) => entry.id === deleteId);
     if (!item || !window.confirm(`Eliminar “${item.title}”? Esta acção não pode ser anulada.`)) return;
-    saveCollections(collections.filter((entry) => entry.id !== deleteId));
-    renderList();
-    showMessage('Coleção eliminada.', 'success');
+    const next = collections.filter((entry) => entry.id !== deleteId);
+    try {
+      await publishSharedCollections(next, 'chore: remover coleção Aurora');
+      saveCollections(next);
+      renderList();
+      showMessage('Coleção eliminada para todos.', 'success');
+    } catch (error) {
+      showMessage(error.message, 'error');
+    }
   }
 }
 
@@ -199,7 +213,7 @@ function importData(event) {
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = () => {
+  reader.onload = async () => {
     try {
       const payload = JSON.parse(reader.result);
       const incoming = Array.isArray(payload) ? payload : payload.collections;
@@ -210,9 +224,10 @@ function importData(event) {
         if (ids.has(item.id) || titles.has(normalize(item.title))) throw new Error('Foram encontradas coleções duplicadas no ficheiro.');
         ids.add(item.id); titles.add(normalize(item.title));
       }
+      await publishSharedCollections(incoming, 'feat: importar coleções Aurora');
       saveCollections(incoming);
       renderList();
-      showMessage('Coleções importadas e validadas com sucesso.', 'success');
+      showMessage('Coleções importadas e visíveis para todos.', 'success');
     } catch (error) {
       showMessage(error.message, 'error');
     } finally {
@@ -284,6 +299,26 @@ async function githubFilesApi(action, payload = {}) {
     return { ok: true, file: { name: result.name, path: result.path, sha: result.sha, size: result.size, content: decodeGithubContent(result.content) } };
   }
   return { ok: true, commit: result.commit?.sha || '', file: result.content ? { path: result.content.path, sha: result.content.sha } : null };
+}
+
+async function publishSharedCollections(collections, message) {
+  const content = JSON.stringify({ version: 1, updatedAt: new Date().toISOString(), collections }, null, 2);
+  const remote = await githubFilesApi('read', { path: PUBLIC_COLLECTIONS_FILE });
+  return githubFilesApi('write', {
+    path: PUBLIC_COLLECTIONS_FILE,
+    content,
+    sha: remote.file.sha,
+    message
+  });
+}
+
+async function syncLocalCollectionsFromRepository() {
+  const remote = await githubFilesApi('read', { path: PUBLIC_COLLECTIONS_FILE });
+  const payload = JSON.parse(remote.file.content);
+  const collections = Array.isArray(payload) ? payload : payload.collections;
+  if (!Array.isArray(collections)) throw new Error('O ficheiro público de colecções não contém uma lista válida.');
+  saveCollections(collections);
+  return collections;
 }
 
 async function verifyGithubToken(token) {
@@ -464,6 +499,7 @@ async function setupAccess() {
       gate.hidden = true;
       content.hidden = false;
       setGithubStatus(`${repository.full_name} · escrita activa`, 'is-ready');
+      await syncLocalCollectionsFromRepository();
       renderList();
       await refreshRepositoryFiles();
     } catch (error) {

@@ -15,6 +15,8 @@ A Gestão apresenta uma mensagem específica para token inválido, repositório 
 
 Depois de entrar, é possível listar e abrir ficheiros remotos, editar texto, carregar ficheiros locais, gerar o índice JSON das colecções, descarregar ficheiros e criar ou actualizar ficheiros no GitHub através de commits.
 
+As colecções são sincronizadas no ficheiro público `content/colecoes.json`. Ao criar, editar, publicar, arquivar, eliminar ou importar uma coleção, a Gestão actualiza esse ficheiro através de um commit. A página `collections.html` lê o ficheiro público directamente no GitHub Pages com cache-busting, pelo que a mesma informação fica disponível para todos os utilizadores e navegadores depois da propagação do deployment.
+
 A API GitHub de Contents requer o `sha` actual quando um ficheiro existente é actualizado. A Gestão carrega esse valor automaticamente e avisa se houver conflito ou alteração concorrente.
 
 Referências oficiais:
