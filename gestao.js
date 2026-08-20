@@ -5,6 +5,7 @@ const DEFAULT_COLLECTIONS = [];
 
 const $ = (selector) => document.querySelector(selector);
 let managementSessionToken = '';
+let sessionCollections = [];
 let repositoryFiles = [];
 let currentFilePath = '';
 let currentFileSha = '';
@@ -16,14 +17,26 @@ const uid = () => `collection-${Date.now()}-${Math.random().toString(36).slice(2
 function readCollections() {
   try {
     const saved = localStorage.getItem(COLLECTIONS_KEY);
-    return saved ? JSON.parse(saved) : DEFAULT_COLLECTIONS;
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) {
+        sessionCollections = parsed;
+        return parsed;
+      }
+    }
   } catch {
-    return DEFAULT_COLLECTIONS;
+    // O conteúdo em memória continua disponível se o localStorage estiver cheio ou bloqueado.
   }
+  return sessionCollections.length ? sessionCollections : DEFAULT_COLLECTIONS;
 }
 
 function saveCollections(collections) {
-  localStorage.setItem(COLLECTIONS_KEY, JSON.stringify(collections));
+  sessionCollections = Array.isArray(collections) ? collections : [];
+  try {
+    localStorage.setItem(COLLECTIONS_KEY, JSON.stringify(sessionCollections));
+  } catch {
+    // A fonte de verdade é o ficheiro público no GitHub; a sessão continua utilizável.
+  }
   window.dispatchEvent(new StorageEvent('storage', { key: COLLECTIONS_KEY }));
 }
 
@@ -244,6 +257,10 @@ function showFileMessage(message, type = '') {
   target.className = `form-message ${type}`;
 }
 
+function errorIsNetwork(result, response) {
+  return !response || response.status === 0 || result?.message === 'Failed to fetch';
+}
+
 function githubHeaders() {
   return {
     Accept: 'application/vnd.github+json',
@@ -272,7 +289,9 @@ function encodeGithubContent(value = '') {
 async function githubFilesApi(action, payload = {}) {
   const isList = action === 'list';
   const path = payload.path || '';
-  const url = githubContentsUrl(path) + `?ref=${encodeURIComponent(GITHUB_REPOSITORY.branch)}`;
+  const treeUrl = `https://api.github.com/repos/${GITHUB_REPOSITORY.owner}/${GITHUB_REPOSITORY.repo}/git/trees/${encodeURIComponent(GITHUB_REPOSITORY.branch)}?recursive=1`;
+  const readUrl = githubContentsUrl(path) + `?ref=${encodeURIComponent(GITHUB_REPOSITORY.branch)}`;
+  const url = isList ? treeUrl : (action === 'write' ? githubContentsUrl(path) : readUrl);
   const options = { method: isList || action === 'read' ? 'GET' : 'PUT', headers: githubHeaders() };
   if (action === 'write') {
     options.headers['Content-Type'] = 'application/json';
@@ -283,16 +302,27 @@ async function githubFilesApi(action, payload = {}) {
       ...(payload.sha ? { sha: payload.sha } : {})
     });
   }
-  const response = await fetch(url, options);
-  const result = await response.json().catch(() => ({}));
+  let response;
+  let result = {};
+  try {
+    response = await fetch(url, options);
+    result = await response.json().catch(() => ({}));
+  } catch {
+    throw new Error('Não foi possível contactar a API do GitHub. Verifique a ligação, extensões de bloqueio e tente novamente.');
+  }
   if (!response.ok) {
     if (response.status === 401) throw new Error('Token GitHub inválido ou expirado. Gere um token novo e tente novamente.');
     if (response.status === 403) throw new Error('GitHub recusou a operação. Confirme Contents: Read and write e o acesso ao repositório auroracommunityAO/AC.');
     if (response.status === 404) throw new Error('Repositório ou caminho não encontrado. Confirme o token, a conta e a branch main.');
+    if (response.status === 409) throw new Error('O ficheiro mudou no GitHub entretanto. Actualize o inventário, abra novamente o ficheiro e tente publicar outra vez.');
+    if (response.status === 422) throw new Error(result.message || 'O GitHub não aceitou o conteúdo ou o caminho indicado.');
+    if (errorIsNetwork(result, response)) throw new Error('Não foi possível contactar a API do GitHub. Verifique a ligação, extensões de bloqueio e tente novamente.');
     throw new Error(result.message || 'Não foi possível comunicar com o GitHub.');
   }
   if (action === 'list') {
-    return { ok: true, repository: `${GITHUB_REPOSITORY.owner}/${GITHUB_REPOSITORY.repo}`, files: Array.isArray(result) ? result.filter((item) => item.type === 'file').map((item) => ({ name: item.name, path: item.path, sha: item.sha, size: item.size })) : [] };
+    const tree = Array.isArray(result.tree) ? result.tree : [];
+    if (result.truncated) throw new Error('O inventário do repositório é demasiado grande para ser carregado de uma vez. Use a pesquisa ou publique ficheiros directamente pelo caminho.');
+    return { ok: true, repository: `${GITHUB_REPOSITORY.owner}/${GITHUB_REPOSITORY.repo}`, files: tree.filter((item) => item.type === 'blob').map((item) => ({ name: item.path.split('/').pop(), path: item.path, sha: item.sha, size: item.size || 0 })) };
   }
   if (action === 'read') {
     if (result.type !== 'file') throw new Error('O caminho indicado não é um ficheiro.');
@@ -322,10 +352,16 @@ async function syncLocalCollectionsFromRepository() {
 }
 
 async function verifyGithubToken(token) {
-  const response = await fetch(`https://api.github.com/repos/${GITHUB_REPOSITORY.owner}/${GITHUB_REPOSITORY.repo}`, {
-    headers: { Accept: 'application/vnd.github+json', Authorization: `Bearer ${token}`, 'X-GitHub-Api-Version': '2022-11-28' }
-  });
-  const result = await response.json().catch(() => ({}));
+  let response;
+  let result = {};
+  try {
+    response = await fetch(`https://api.github.com/repos/${GITHUB_REPOSITORY.owner}/${GITHUB_REPOSITORY.repo}`, {
+      headers: { Accept: 'application/vnd.github+json', Authorization: `Bearer ${token}`, 'X-GitHub-Api-Version': '2022-11-28' }
+    });
+    result = await response.json().catch(() => ({}));
+  } catch {
+    throw new Error('Não foi possível contactar o GitHub. Verifique a ligação, extensões de bloqueio e tente novamente.');
+  }
   if (response.status === 401) throw new Error('Token GitHub inválido ou expirado.');
   if (response.status === 404) throw new Error('O token não tem acesso ao repositório auroracommunityAO/AC ou o repositório não existe.');
   if (response.status === 403) throw new Error('GitHub recusou o token. Confirme a aprovação e as permissões do token.');
@@ -447,8 +483,11 @@ async function saveProjectFile() {
   if (!path || path.includes('..') || path.startsWith('.git/')) return showFileMessage('Indique um caminho válido, sem “..” ou .git/.', 'error');
   if (!content.trim()) return showFileMessage('O conteúdo do ficheiro não pode ficar vazio.', 'error');
   if (!window.confirm(`Enviar “${path}” para o GitHub? Esta acção cria um commit no repositório.`)) return;
+  const saveButton = $('#save-project-file');
   const pathChanged = currentFilePath && currentFilePath !== path;
   try {
+    saveButton.disabled = true;
+    saveButton.textContent = 'A enviar…';
     showFileMessage('A enviar ficheiro para o GitHub…');
     const result = await githubFilesApi('write', {
       path,
@@ -465,6 +504,9 @@ async function saveProjectFile() {
     await refreshRepositoryFiles();
   } catch (error) {
     showFileMessage(error.message, 'error');
+  } finally {
+    saveButton.disabled = false;
+    saveButton.textContent = 'Enviar para GitHub';
   }
 }
 
@@ -487,25 +529,37 @@ async function setupAccess() {
   const content = $('#management-content');
   const form = $('#access-form');
   const message = $('#access-message');
+  const submitButton = form.querySelector('button[type="submit"]');
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
+    if (submitButton.disabled) return;
     const token = $('#access-token').value.trim();
+    if (!token) return;
+    submitButton.disabled = true;
+    submitButton.textContent = 'A validar…';
     message.textContent = 'A testar o token e as permissões GitHub…';
     message.className = 'form-message';
     try {
       const repository = await verifyGithubToken(token);
       managementSessionToken = token;
+      setGithubStatus(`${repository.full_name} · a sincronizar…`);
+      await syncLocalCollectionsFromRepository();
       form.reset();
       gate.hidden = true;
       content.hidden = false;
       setGithubStatus(`${repository.full_name} · escrita activa`, 'is-ready');
-      await syncLocalCollectionsFromRepository();
       renderList();
       await refreshRepositoryFiles();
     } catch (error) {
       managementSessionToken = '';
+      sessionCollections = [];
+      gate.hidden = false;
+      content.hidden = true;
       message.textContent = error.message;
       message.className = 'form-message error';
+    } finally {
+      submitButton.disabled = false;
+      submitButton.textContent = 'Testar e entrar';
     }
   });
 }
