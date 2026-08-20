@@ -713,3 +713,35 @@ h1, h2, h3, .font-serif {
     .form-actions { justify-content: stretch; }
     .form-actions .btn { flex: 1; }
 }
+
+.file-workspace { margin-top: 2rem; padding: 1.4rem; border: 1px solid rgba(192,132,252,0.18); border-radius: 22px; background: rgba(15,23,42,0.48); }
+.workspace-heading { display: flex; justify-content: space-between; align-items: start; gap: 1rem; margin-bottom: 1.2rem; }
+.workspace-heading .section-title { margin-bottom: 0.35rem; }
+.workspace-status { display: inline-flex; align-items: center; min-height: 32px; padding: 0.4rem 0.65rem; border: 1px solid rgba(148,163,184,0.24); border-radius: 999px; color: #cbd5e1; font-size: 0.68rem; white-space: nowrap; }
+.workspace-status.is-ready { border-color: rgba(74,222,128,0.35); color: #86efac; }
+.workspace-status.is-error { border-color: rgba(248,113,113,0.35); color: #fca5a5; }
+.file-workspace-grid { display: grid; grid-template-columns: minmax(220px, 0.75fr) minmax(0, 1.5fr); gap: 1rem; }
+.repository-panel, .file-editor-panel { min-width: 0; padding: 1rem; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; background: rgba(2,6,23,0.38); }
+.panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.8rem; }
+.panel-heading h3 { color: #f8fafc; font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; }
+.panel-heading .btn { width: auto; min-height: 34px; padding: 0.45rem 0.65rem; font-size: 0.68rem; }
+.repository-file-list { display: grid; gap: 0.35rem; max-height: 460px; overflow: auto; margin-top: 0.8rem; }
+.repository-file { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; width: 100%; padding: 0.65rem 0.7rem; border: 1px solid transparent; border-radius: 10px; background: rgba(30,41,59,0.45); color: #e2e8f0; text-align: left; cursor: pointer; transition: border-color 160ms ease, background 160ms ease, transform 160ms ease; }
+.repository-file:hover, .repository-file:focus-visible { border-color: rgba(192,132,252,0.48); background: rgba(76,29,149,0.28); outline: none; transform: translateX(2px); }
+.repository-file span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.72rem; }
+.repository-file small { flex: 0 0 auto; color: #64748b; font-size: 0.62rem; }
+.workspace-empty { padding: 1.2rem 0.4rem; color: #64748b; font-size: 0.76rem; line-height: 1.5; }
+.code-editor { min-height: 330px; resize: vertical; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; font-size: 0.72rem; line-height: 1.55; tab-size: 2; }
+.file-editor-panel label { display: grid; gap: 0.45rem; }
+.file-editor-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.9rem; }
+.file-editor-actions .btn { width: auto; min-height: 38px; padding-inline: 0.75rem; font-size: 0.7rem; }
+@media (max-width: 900px) {
+    .file-workspace-grid { grid-template-columns: 1fr; }
+    .repository-file-list { max-height: 260px; }
+}
+@media (max-width: 760px) {
+    .file-workspace { padding: 1rem; }
+    .workspace-heading { flex-direction: column; }
+    .workspace-status { white-space: normal; }
+    .file-editor-actions .btn, .file-editor-actions .file-button { flex: 1 1 calc(50% - 0.5rem); text-align: center; }
+}

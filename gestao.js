@@ -8,6 +8,7 @@ let managementSessionToken = '';
 let repositoryFiles = [];
 let currentFilePath = '';
 let currentFileSha = '';
+const GITHUB_REPOSITORY = { owner: 'auroracommunityAO', repo: 'AC', branch: 'main' };
 const normalize = (value = '') => String(value).trim().toLocaleLowerCase('pt-PT').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 const uid = () => `collection-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
@@ -228,14 +229,73 @@ function showFileMessage(message, type = '') {
   target.className = `form-message ${type}`;
 }
 
+function githubHeaders() {
+  return {
+    Accept: 'application/vnd.github+json',
+    Authorization: `Bearer ${managementSessionToken}`,
+    'X-GitHub-Api-Version': '2022-11-28'
+  };
+}
+
+function githubContentsUrl(filePath = '') {
+  const suffix = filePath ? `/${filePath.split('/').filter(Boolean).map(encodeURIComponent).join('/')}` : '';
+  return `https://api.github.com/repos/${GITHUB_REPOSITORY.owner}/${GITHUB_REPOSITORY.repo}/contents${suffix}`;
+}
+
+function decodeGithubContent(value = '') {
+  const binary = atob(value.replace(/\s/g, ''));
+  return new TextDecoder().decode(Uint8Array.from(binary, (character) => character.charCodeAt(0)));
+}
+
+function encodeGithubContent(value = '') {
+  const bytes = new TextEncoder().encode(value);
+  let binary = '';
+  for (let index = 0; index < bytes.length; index += 0x8000) binary += String.fromCharCode(...bytes.subarray(index, index + 0x8000));
+  return btoa(binary);
+}
+
 async function githubFilesApi(action, payload = {}) {
-  const response = await fetch('/api/gestao-files', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${managementSessionToken}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action, ...payload })
+  const isList = action === 'list';
+  const path = payload.path || '';
+  const url = githubContentsUrl(path) + `?ref=${encodeURIComponent(GITHUB_REPOSITORY.branch)}`;
+  const options = { method: isList || action === 'read' ? 'GET' : 'PUT', headers: githubHeaders() };
+  if (action === 'write') {
+    options.headers['Content-Type'] = 'application/json';
+    options.body = JSON.stringify({
+      message: payload.message || `chore: actualizar ${path}`,
+      content: encodeGithubContent(payload.content || ''),
+      branch: GITHUB_REPOSITORY.branch,
+      ...(payload.sha ? { sha: payload.sha } : {})
+    });
+  }
+  const response = await fetch(url, options);
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    if (response.status === 401) throw new Error('Token GitHub inválido ou expirado. Gere um token novo e tente novamente.');
+    if (response.status === 403) throw new Error('GitHub recusou a operação. Confirme Contents: Read and write e o acesso ao repositório auroracommunityAO/AC.');
+    if (response.status === 404) throw new Error('Repositório ou caminho não encontrado. Confirme o token, a conta e a branch main.');
+    throw new Error(result.message || 'Não foi possível comunicar com o GitHub.');
+  }
+  if (action === 'list') {
+    return { ok: true, repository: `${GITHUB_REPOSITORY.owner}/${GITHUB_REPOSITORY.repo}`, files: Array.isArray(result) ? result.filter((item) => item.type === 'file').map((item) => ({ name: item.name, path: item.path, sha: item.sha, size: item.size })) : [] };
+  }
+  if (action === 'read') {
+    if (result.type !== 'file') throw new Error('O caminho indicado não é um ficheiro.');
+    return { ok: true, file: { name: result.name, path: result.path, sha: result.sha, size: result.size, content: decodeGithubContent(result.content) } };
+  }
+  return { ok: true, commit: result.commit?.sha || '', file: result.content ? { path: result.content.path, sha: result.content.sha } : null };
+}
+
+async function verifyGithubToken(token) {
+  const response = await fetch(`https://api.github.com/repos/${GITHUB_REPOSITORY.owner}/${GITHUB_REPOSITORY.repo}`, {
+    headers: { Accept: 'application/vnd.github+json', Authorization: `Bearer ${token}`, 'X-GitHub-Api-Version': '2022-11-28' }
   });
   const result = await response.json().catch(() => ({}));
-  if (!response.ok || !result.ok) throw new Error(result.error || 'Não foi possível comunicar com o GitHub.');
+  if (response.status === 401) throw new Error('Token GitHub inválido ou expirado.');
+  if (response.status === 404) throw new Error('O token não tem acesso ao repositório auroracommunityAO/AC ou o repositório não existe.');
+  if (response.status === 403) throw new Error('GitHub recusou o token. Confirme a aprovação e as permissões do token.');
+  if (!response.ok) throw new Error(result.message || 'Não foi possível validar o token GitHub.');
+  if (!result.permissions?.push) throw new Error('O token foi aceite, mas não tem permissão de escrita. Active Contents: Read and write.');
   return result;
 }
 
@@ -394,23 +454,20 @@ async function setupAccess() {
   const message = $('#access-message');
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
-    const token = $('#access-token').value;
-    message.textContent = 'A validar token…';
+    const token = $('#access-token').value.trim();
+    message.textContent = 'A testar o token e as permissões GitHub…';
     message.className = 'form-message';
     try {
-      const response = await fetch('/api/gestao-auth', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok || !result.ok) throw new Error(result.error || 'Não foi possível validar o token.');
+      const repository = await verifyGithubToken(token);
       managementSessionToken = token;
       form.reset();
       gate.hidden = true;
       content.hidden = false;
+      setGithubStatus(`${repository.full_name} · escrita activa`, 'is-ready');
       renderList();
       await refreshRepositoryFiles();
     } catch (error) {
+      managementSessionToken = '';
       message.textContent = error.message;
       message.className = 'form-message error';
     }
