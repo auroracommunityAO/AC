@@ -274,6 +274,19 @@ function githubContentsUrl(filePath = '') {
   return `https://api.github.com/repos/${GITHUB_REPOSITORY.owner}/${GITHUB_REPOSITORY.repo}/contents${suffix}`;
 }
 
+async function fetchGithub(url, options = {}) {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), 12000);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } catch (error) {
+    if (error.name === 'AbortError') throw new Error('O GitHub demorou demasiado a responder. Verifique a ligação e tente novamente.');
+    throw error;
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+}
+
 function decodeGithubContent(value = '') {
   const binary = atob(value.replace(/\s/g, ''));
   return new TextDecoder().decode(Uint8Array.from(binary, (character) => character.charCodeAt(0)));
@@ -305,9 +318,10 @@ async function githubFilesApi(action, payload = {}) {
   let response;
   let result = {};
   try {
-    response = await fetch(url, options);
+    response = await fetchGithub(url, options);
     result = await response.json().catch(() => ({}));
-  } catch {
+  } catch (error) {
+    if (error.message?.includes('demorou demasiado')) throw error;
     throw new Error('Não foi possível contactar a API do GitHub. Verifique a ligação, extensões de bloqueio e tente novamente.');
   }
   if (!response.ok) {
@@ -355,11 +369,12 @@ async function verifyGithubToken(token) {
   let response;
   let result = {};
   try {
-    response = await fetch(`https://api.github.com/repos/${GITHUB_REPOSITORY.owner}/${GITHUB_REPOSITORY.repo}`, {
+    response = await fetchGithub(`https://api.github.com/repos/${GITHUB_REPOSITORY.owner}/${GITHUB_REPOSITORY.repo}`, {
       headers: { Accept: 'application/vnd.github+json', Authorization: `Bearer ${token}`, 'X-GitHub-Api-Version': '2022-11-28' }
     });
     result = await response.json().catch(() => ({}));
-  } catch {
+  } catch (error) {
+    if (error.message?.includes('demorou demasiado')) throw error;
     throw new Error('Não foi possível contactar o GitHub. Verifique a ligação, extensões de bloqueio e tente novamente.');
   }
   if (response.status === 401) throw new Error('Token GitHub inválido ou expirado.');
@@ -400,7 +415,7 @@ function renderRepositoryFiles() {
   list.innerHTML = filtered.map((file) => `<button type="button" class="repository-file" data-file-path="${escapeHtml(file.path)}"><span>${escapeHtml(file.path)}</span><small>${file.size || 0} bytes</small></button>`).join('');
 }
 
-async function refreshRepositoryFiles() {
+async function refreshRepositoryFiles({ rethrow = false } = {}) {
   if (!managementSessionToken) return;
   setGithubStatus('A carregar…');
   showFileMessage('A ler os ficheiros do repositório…');
@@ -413,6 +428,7 @@ async function refreshRepositoryFiles() {
   } catch (error) {
     setGithubStatus('Erro na integração', 'is-error');
     showFileMessage(error.message, 'error');
+    if (rethrow) throw error;
   }
 }
 
@@ -547,9 +563,9 @@ async function setupAccess() {
       form.reset();
       gate.hidden = true;
       content.hidden = false;
-      setGithubStatus(`${repository.full_name} · escrita activa`, 'is-ready');
+      setGithubStatus(`${repository.full_name} · a carregar ficheiros…`);
       renderList();
-      await refreshRepositoryFiles();
+      refreshRepositoryFiles();
     } catch (error) {
       managementSessionToken = '';
       sessionCollections = [];
