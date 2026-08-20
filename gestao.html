@@ -90,6 +90,40 @@
                     </div>
                     <p id="management-message" class="form-message" role="status"></p>
                     <div id="management-list" class="management-list"></div>
+
+                    <section class="file-workspace" aria-labelledby="file-workspace-title">
+                        <div class="workspace-heading">
+                            <div>
+                                <span class="section-tag">Publicação GitHub</span>
+                                <h2 id="file-workspace-title" class="section-title">Ficheiros do projecto</h2>
+                                <p class="section-desc">Leia, edite, gere e publique ficheiros no repositório Aurora sem expor o token GitHub no navegador.</p>
+                            </div>
+                            <span id="github-repository-status" class="workspace-status">Integração por configurar</span>
+                        </div>
+                        <div class="file-workspace-grid">
+                            <div class="repository-panel">
+                                <div class="panel-heading"><h3>Inventário</h3><button id="refresh-files" type="button" class="btn btn-quiet">Actualizar</button></div>
+                                <label class="search-field"><span class="sr-only">Pesquisar ficheiros</span><input id="file-search" type="search" placeholder="Pesquisar ficheiros…"></label>
+                                <div id="repository-file-list" class="repository-file-list"><p class="workspace-empty">Autentique-se e actualize para carregar os ficheiros.</p></div>
+                            </div>
+                            <div class="file-editor-panel">
+                                <div class="panel-heading"><h3 id="file-editor-title">Novo ficheiro</h3><span id="file-editor-state" class="workspace-status">Rascunho</span></div>
+                                <div class="form-grid">
+                                    <label>Caminho <input id="file-path" type="text" placeholder="Ex.: content/colecoes.json" spellcheck="false"></label>
+                                    <label>Mensagem do commit <input id="file-commit-message" type="text" placeholder="Ex.: actualizar colecções"></label>
+                                </div>
+                                <label>Conteúdo <textarea id="file-content" class="code-editor" rows="18" spellcheck="false" placeholder="Escreva ou carregue o conteúdo do ficheiro…"></textarea></label>
+                                <div class="file-editor-actions">
+                                    <label class="btn btn-quiet file-button">Carregar ficheiro<input id="upload-project-file" type="file" hidden></label>
+                                    <button id="new-project-file" type="button" class="btn btn-quiet">Limpar</button>
+                                    <button id="generate-collections-file" type="button" class="btn btn-quiet">Gerar índice</button>
+                                    <button id="download-project-file" type="button" class="btn btn-quiet">Descarregar</button>
+                                    <button id="save-project-file" type="button" class="btn btn-green">Enviar para GitHub</button>
+                                </div>
+                                <p id="file-workspace-message" class="form-message" role="status"></p>
+                            </div>
+                        </div>
+                    </section>
                 </div>
             </div>
         </section>

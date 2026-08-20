@@ -1,0 +1,9 @@
+# Segredos locais
+.env
+.env.*
+!.env.example
+
+# Dependências e logs
+node_modules/
+npm-debug.log*
+*.log

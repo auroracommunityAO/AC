@@ -4,6 +4,10 @@ const MAX_IMAGE_SIZE = 2.5 * 1024 * 1024;
 const DEFAULT_COLLECTIONS = [];
 
 const $ = (selector) => document.querySelector(selector);
+let managementSessionToken = '';
+let repositoryFiles = [];
+let currentFilePath = '';
+let currentFileSha = '';
 const normalize = (value = '') => String(value).trim().toLocaleLowerCase('pt-PT').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 const uid = () => `collection-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
@@ -217,6 +221,172 @@ function importData(event) {
   reader.readAsText(file);
 }
 
+function showFileMessage(message, type = '') {
+  const target = $('#file-workspace-message');
+  if (!target) return;
+  target.textContent = message;
+  target.className = `form-message ${type}`;
+}
+
+async function githubFilesApi(action, payload = {}) {
+  const response = await fetch('/api/gestao-files', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${managementSessionToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action, ...payload })
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok || !result.ok) throw new Error(result.error || 'Não foi possível comunicar com o GitHub.');
+  return result;
+}
+
+function setGithubStatus(text, type = '') {
+  const status = $('#github-repository-status');
+  if (!status) return;
+  status.textContent = text;
+  status.className = `workspace-status ${type}`;
+}
+
+function resetFileEditor() {
+  currentFilePath = '';
+  currentFileSha = '';
+  $('#file-editor-title').textContent = 'Novo ficheiro';
+  $('#file-editor-state').textContent = 'Rascunho';
+  $('#file-path').value = '';
+  $('#file-commit-message').value = '';
+  $('#file-content').value = '';
+  showFileMessage('');
+}
+
+function renderRepositoryFiles() {
+  const list = $('#repository-file-list');
+  if (!list) return;
+  const term = normalize($('#file-search')?.value || '');
+  const filtered = repositoryFiles.filter((file) => !term || normalize(file.path).includes(term));
+  if (!filtered.length) {
+    list.innerHTML = '<p class="workspace-empty">Nenhum ficheiro encontrado neste nível.</p>';
+    return;
+  }
+  list.innerHTML = filtered.map((file) => `<button type="button" class="repository-file" data-file-path="${escapeHtml(file.path)}"><span>${escapeHtml(file.path)}</span><small>${file.size || 0} bytes</small></button>`).join('');
+}
+
+async function refreshRepositoryFiles() {
+  if (!managementSessionToken) return;
+  setGithubStatus('A carregar…');
+  showFileMessage('A ler os ficheiros do repositório…');
+  try {
+    const result = await githubFilesApi('list');
+    repositoryFiles = result.files || [];
+    renderRepositoryFiles();
+    setGithubStatus(result.repository, 'is-ready');
+    showFileMessage(`${repositoryFiles.length} ficheiro(s) carregado(s).`, 'success');
+  } catch (error) {
+    setGithubStatus('Erro na integração', 'is-error');
+    showFileMessage(error.message, 'error');
+  }
+}
+
+async function openRepositoryFile(path) {
+  try {
+    showFileMessage(`A carregar ${path}…`);
+    const result = await githubFilesApi('read', { path });
+    currentFilePath = result.file.path;
+    currentFileSha = result.file.sha;
+    $('#file-editor-title').textContent = result.file.name;
+    $('#file-editor-state').textContent = 'Ficheiro remoto';
+    $('#file-path').value = result.file.path;
+    $('#file-commit-message').value = `actualizar ${result.file.name}`;
+    $('#file-content').value = result.file.content;
+    showFileMessage('Ficheiro carregado. Pode editar e enviar uma nova versão.');
+  } catch (error) {
+    showFileMessage(error.message, 'error');
+  }
+}
+
+function generateCollectionsFile() {
+  const content = JSON.stringify({ version: 1, generatedAt: new Date().toISOString(), collections: readCollections() }, null, 2);
+  currentFilePath = '';
+  currentFileSha = '';
+  $('#file-editor-title').textContent = 'Índice de colecções gerado';
+  $('#file-editor-state').textContent = 'Gerado localmente';
+  $('#file-path').value = 'content/colecoes.json';
+  $('#file-commit-message').value = 'feat: actualizar índice de colecções';
+  $('#file-content').value = content;
+  showFileMessage('Índice gerado a partir das colecções da Gestão. Reveja o conteúdo antes de enviar.', 'success');
+}
+
+function uploadProjectFile(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  if (file.size > 1024 * 1024) { showFileMessage('O ficheiro excede o limite de 1 MB.', 'error'); event.target.value = ''; return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    currentFilePath = '';
+    currentFileSha = '';
+    $('#file-editor-title').textContent = file.name;
+    $('#file-editor-state').textContent = 'Carregado localmente';
+    $('#file-path').value = file.name;
+    $('#file-commit-message').value = `chore: adicionar ${file.name}`;
+    $('#file-content').value = String(reader.result || '');
+    showFileMessage('Ficheiro carregado localmente. Escolha o caminho final e envie-o para o GitHub.', 'success');
+    event.target.value = '';
+  };
+  reader.onerror = () => showFileMessage('Não foi possível ler o ficheiro.', 'error');
+  reader.readAsText(file);
+}
+
+function downloadProjectFile() {
+  const path = $('#file-path').value.trim() || 'aurora-file.txt';
+  const blob = new Blob([$('#file-content').value], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = path.split('/').pop() || 'aurora-file.txt';
+  link.click();
+  URL.revokeObjectURL(url);
+  showFileMessage('Ficheiro descarregado.', 'success');
+}
+
+async function saveProjectFile() {
+  const path = $('#file-path').value.trim();
+  const content = $('#file-content').value;
+  if (!path || path.includes('..') || path.startsWith('.git/')) return showFileMessage('Indique um caminho válido, sem “..” ou .git/.', 'error');
+  if (!content.trim()) return showFileMessage('O conteúdo do ficheiro não pode ficar vazio.', 'error');
+  if (!window.confirm(`Enviar “${path}” para o GitHub? Esta acção cria um commit no repositório.`)) return;
+  const pathChanged = currentFilePath && currentFilePath !== path;
+  try {
+    showFileMessage('A enviar ficheiro para o GitHub…');
+    const result = await githubFilesApi('write', {
+      path,
+      content,
+      sha: pathChanged ? undefined : currentFileSha,
+      message: $('#file-commit-message').value.trim() || `chore: actualizar ${path}`,
+      generate: $('#file-editor-state').textContent.includes('Gerado')
+    });
+    currentFilePath = path;
+    currentFileSha = result.file?.sha || currentFileSha;
+    $('#file-editor-state').textContent = 'Publicado no GitHub';
+    setGithubStatus('Publicado', 'is-ready');
+    showFileMessage(`Ficheiro publicado com sucesso. Commit ${result.commit ? result.commit.slice(0, 7) : 'criado'}.`, 'success');
+    await refreshRepositoryFiles();
+  } catch (error) {
+    showFileMessage(error.message, 'error');
+  }
+}
+
+function setupFileWorkspace() {
+  $('#refresh-files')?.addEventListener('click', refreshRepositoryFiles);
+  $('#file-search')?.addEventListener('input', renderRepositoryFiles);
+  $('#repository-file-list')?.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-file-path]');
+    if (button) openRepositoryFile(button.dataset.filePath);
+  });
+  $('#new-project-file')?.addEventListener('click', resetFileEditor);
+  $('#generate-collections-file')?.addEventListener('click', generateCollectionsFile);
+  $('#download-project-file')?.addEventListener('click', downloadProjectFile);
+  $('#save-project-file')?.addEventListener('click', saveProjectFile);
+  $('#upload-project-file')?.addEventListener('change', uploadProjectFile);
+}
+
 async function setupAccess() {
   const gate = $('#access-gate');
   const content = $('#management-content');
@@ -234,10 +404,12 @@ async function setupAccess() {
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok || !result.ok) throw new Error(result.error || 'Não foi possível validar o token.');
+      managementSessionToken = token;
       form.reset();
       gate.hidden = true;
       content.hidden = false;
       renderList();
+      await refreshRepositoryFiles();
     } catch (error) {
       message.textContent = error.message;
       message.className = 'form-message error';
@@ -247,8 +419,9 @@ async function setupAccess() {
 
 document.addEventListener('DOMContentLoaded', () => {
   setupAccess();
+  setupFileWorkspace();
   $('#new-collection')?.addEventListener('click', () => openEditor());
-  $('#logout')?.addEventListener('click', () => window.location.reload());
+  $('#logout')?.addEventListener('click', () => { managementSessionToken = ''; repositoryFiles = []; window.location.reload(); });
   $('#management-search')?.addEventListener('input', renderList);
   $('#management-status')?.addEventListener('change', renderList);
   $('#management-list')?.addEventListener('click', handleListAction);
