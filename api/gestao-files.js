@@ -109,10 +109,6 @@ module.exports = async function handler(req, res) {
       return json(res, 200, { ok: true, branch, file: { name: payload.name, path: payload.path, sha: payload.sha, size: payload.size, content } });
     }
 
-    if (typeof body.content !== 'string') return json(res, 400, { ok: false, error: 'O conteúdo do ficheiro é obrigatório.' });
-    const byteLength = Buffer.byteLength(body.content, 'utf8');
-    if (byteLength > MAX_FILE_BYTES) return json(res, 413, { ok: false, error: 'O ficheiro excede o limite de 1 MB.' });
-
     if (action === 'delete') {
       const payload = await githubRequest(githubUrl(path), {
         method: 'DELETE',
@@ -120,6 +116,10 @@ module.exports = async function handler(req, res) {
       });
       return json(res, 200, { ok: true, commit: payload.commit?.sha || '' });
     }
+
+    if (typeof body.content !== 'string') return json(res, 400, { ok: false, error: 'O conteúdo do ficheiro é obrigatório.' });
+    const byteLength = Buffer.byteLength(body.content, 'utf8');
+    if (byteLength > MAX_FILE_BYTES) return json(res, 413, { ok: false, error: 'O ficheiro excede o limite de 1 MB.' });
 
     const payload = await githubRequest(githubUrl(path), {
       method: 'PUT',
