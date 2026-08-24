@@ -745,3 +745,32 @@ h1, h2, h3, .font-serif {
     .workspace-status { white-space: normal; }
     .file-editor-actions .btn, .file-editor-actions .file-button { flex: 1 1 calc(50% - 0.5rem); text-align: center; }
 }
+
+
+/* Aurora Project — institutional layout */
+.project-hero { padding-bottom: 4.5rem; }
+.project-intro-grid, .project-outcomes-grid { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 3rem; align-items: start; }
+.project-intro-grid .section-desc:last-child { margin-bottom: 0; }
+.project-section-heading { max-width: 650px; margin: 0 auto 2.2rem; }
+.project-section-heading .section-desc { margin-bottom: 0; }
+.project-card-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+.project-card { min-height: 220px; padding: 1.35rem; background: rgba(17, 24, 39, 0.78); border: 1px solid rgba(124, 58, 237, 0.25); border-radius: 18px; box-shadow: 0 14px 35px rgba(0, 0, 0, 0.12); }
+.project-card h3 { color: #fff; font-family: 'Cormorant Garamond', serif; font-size: 1.55rem; line-height: 1.08; margin: 1rem 0 0.65rem; }
+.project-card p { color: var(--text-secondary); font-size: 0.78rem; line-height: 1.65; }
+.project-card-number, .project-card-label { color: #67e8f9; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+.project-card-accent { background: linear-gradient(145deg, rgba(34, 24, 58, 0.86), rgba(17, 24, 39, 0.78)); border-color: rgba(192, 132, 252, 0.3); }
+.project-card-accent h3 { margin-top: 0.8rem; }
+.project-outcomes-list { display: grid; gap: 0.7rem; }
+.project-outcome { display: grid; gap: 0.3rem; padding: 1rem 1.1rem; border-left: 2px solid rgba(103, 232, 249, 0.7); background: rgba(15, 23, 42, 0.55); }
+.project-outcome strong { color: #f8fafc; font-family: 'Cormorant Garamond', serif; font-size: 1.25rem; }
+.project-outcome span { color: var(--text-secondary); font-size: 0.78rem; line-height: 1.55; }
+
+@media (max-width: 900px) {
+    .project-card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 760px) {
+    .project-intro-grid, .project-outcomes-grid { grid-template-columns: 1fr; gap: 1rem; }
+    .project-card-grid { grid-template-columns: 1fr; }
+    .project-card { min-height: 0; }
+}
