@@ -46,7 +46,7 @@ function renderCollections() {
   count.textContent = `${filtered.length} ${filtered.length === 1 ? 'coleção' : 'coleções'}`;
   grid.innerHTML = filtered.map((collection) => {
     const cover = collection.cover
-      ? `<img src="${escapeHtml(collection.cover)}" alt="Capa da coleção ${escapeHtml(collection.title)}" class="collection-card-cover">`
+      ? `<img src="${escapeHtml(collection.cover)}" alt="Capa da coleção ${escapeHtml(collection.title)}" class="collection-card-cover" loading="lazy" decoding="async">`
       : '<div class="collection-card-cover collection-card-cover-fallback" aria-hidden="true"><span>✦</span></div>';
     const externalLink = collection.externalUrl
       ? `<a href="${escapeHtml(collection.externalUrl)}" target="_blank" rel="noopener noreferrer" class="text-link">Ver coleção <span aria-hidden="true">↗</span></a>`
