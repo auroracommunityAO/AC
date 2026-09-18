@@ -1126,3 +1126,12 @@ body {
 @media (max-width: 760px) {
     .collections-page .milestone-image-wrap { width: min(100%, 220px); }
 }
+
+/* Coleções sem o bloco promocional: centralizar o marco da comunidade */
+.collections-page .collection-hero-grid {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+}
+.collections-page .collection-hero-grid .milestone-card {
+    width: min(100%, 620px);
+}
