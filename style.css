@@ -1004,3 +1004,100 @@ body {
     .hero-section { padding-top: 4.2rem; }
     .eco-card { padding: 1rem; }
 }
+
+/* Correção final de consistência visual — manter no fim do style.css */
+.site-header:not(.home-header) {
+    position: sticky;
+    top: 0.75rem;
+    width: min(1080px, calc(100% - 2rem));
+    margin: 0 auto;
+    padding: 0.55rem 0.75rem 0.55rem 1rem;
+    border: 1px solid rgba(23, 59, 50, 0.13);
+    border-radius: 999px;
+    background: rgba(255, 253, 249, 0.96);
+    box-shadow: 0 10px 28px rgba(23, 59, 50, 0.08);
+}
+.site-header:not(.home-header) .header-container { max-width: none; }
+.site-header:not(.home-header) .header-nav { align-items: center; gap: 0.95rem; }
+.site-header:not(.home-header) .nav-link { color: #5f6d67; font-size: 0.68rem; }
+.site-header:not(.home-header) .nav-link.active { color: #173b32; font-weight: 700; }
+.site-header:not(.home-header) .brand-logo { width: 30px; height: 30px; border: 0; box-shadow: none; }
+.site-header:not(.home-header) .brand-title { color: #173b32; font-size: 0.78rem; }
+
+/* Hero: texto claro sobre a imagem escura, sem perder leitura */
+.home-page .home-hero-overlay {
+    background: linear-gradient(180deg, rgba(6, 24, 25, 0.18) 0%, rgba(6, 24, 25, 0.34) 48%, rgba(6, 24, 25, 0.72) 100%);
+}
+.home-page .home-hero h1, .home-page .home-hero h1 em { color: #ffffff; -webkit-text-fill-color: #ffffff; text-shadow: 0 3px 18px rgba(0,0,0,0.3); }
+.home-page .home-hero h1 em { color: #c9e5d5; -webkit-text-fill-color: #c9e5d5; }
+.home-page .home-hero-content p { color: #f3f8f4; text-shadow: 0 2px 10px rgba(0,0,0,0.35); }
+.home-page .home-eyebrow { background: rgba(10, 35, 30, 0.58); border-color: rgba(255,255,255,0.32); color: #f6fbf7; }
+.home-page .home-button-quiet { color: #ffffff; text-shadow: 0 2px 8px rgba(0,0,0,0.35); }
+.home-page .home-scroll { color: #ffffff; }
+
+/* Coleções: cartões pequenos, alinhados e com descrições legíveis */
+.collections-page .collections-grid {
+    width: min(100%, 980px);
+    margin: 1.25rem auto 0;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    align-items: stretch;
+}
+.collections-page .collection-card {
+    min-width: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 14px;
+    background: #fffdf9;
+    border: 1px solid rgba(23, 59, 50, 0.14);
+    box-shadow: 0 8px 20px rgba(23, 59, 50, 0.07);
+}
+.collections-page .collection-card-cover {
+    height: 112px;
+    flex: 0 0 112px;
+    object-fit: cover;
+    border-bottom: 1px solid rgba(23, 59, 50, 0.1);
+}
+.collections-page .collection-card-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    padding: 0.9rem;
+}
+.collections-page .collection-card-meta { margin-bottom: 0.5rem; font-size: 0.58rem; }
+.collections-page .collection-card h3 { margin-bottom: 0.45rem; font-size: 1.32rem; line-height: 1.08; }
+.collections-page .collection-card p { min-height: 0; margin: 0; color: #53635c; font-size: 0.75rem; line-height: 1.5; }
+.collections-page .collection-card-footer { margin-top: auto; padding-top: 0.75rem; }
+.collections-page .collection-card-status, .collections-page .text-link { font-size: 0.68rem; }
+.collections-page .collection-hero-copy { max-width: 570px; }
+.collections-page .collection-hero .hero-title { color: #173b32; -webkit-text-fill-color: #173b32; }
+.collections-page .collection-hero .hero-subtitle { color: #53635c; }
+.collections-page .milestone-banner { background: #173b32; }
+.collections-page .milestone-banner .section-title, .collections-page .milestone-banner .section-desc { color: #f5fbf7; }
+.collections-page .milestone-banner .section-tag { color: #b9d8c7; }
+
+/* Superfícies e tipografia: texto sempre compatível com o fundo */
+.flowers-page .hero-section, .project-page .hero-section { color: #173b32; }
+.flowers-page .hero-title, .project-page .hero-title { color: #173b32; -webkit-text-fill-color: #173b32; }
+.flowers-page .hero-subtitle, .project-page .hero-subtitle { color: #53635c; }
+.flowers-page .section-purple, .project-page .section-purple { background: #173b32; }
+.flowers-page .section-purple .section-title, .flowers-page .section-purple .section-desc, .project-page .section-purple .section-title, .project-page .section-purple .section-desc { color: #f5fbf7; }
+.flowers-page .section-purple .objectives-list li, .project-page .section-purple .project-card { color: #263c34; }
+.management-page .management-intro .section-title, .management-page .management-toolbar .section-title { color: #173b32; }
+
+@media (max-width: 760px) {
+    .site-header:not(.home-header) { top: 0.5rem; width: calc(100% - 1rem); padding: 0.5rem 0.65rem; }
+    .site-header:not(.home-header) .brand-title { display: none; }
+    .site-header:not(.home-header) .header-nav { gap: 0.55rem; flex-wrap: wrap; justify-content: end; }
+    .site-header:not(.home-header) .nav-link { font-size: 0.59rem; }
+    .collections-page .collections-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.7rem; }
+    .collections-page .collection-card-cover { height: 92px; flex-basis: 92px; }
+    .collections-page .collection-card-body { padding: 0.7rem; }
+    .collections-page .collection-card h3 { font-size: 1.12rem; }
+    .collections-page .collection-card p { font-size: 0.68rem; }
+}
+@media (max-width: 430px) {
+    .collections-page .collections-grid { grid-template-columns: 1fr; }
+}
