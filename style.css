@@ -1191,3 +1191,11 @@ body {
     .leader-portrait-wrap, .leader-portrait, .ambassadors-card { min-height: 220px; }
     .leader-card-content { padding: 1rem; }
 }
+
+/* Segundo perfil da liderança Aurora */
+.leadership-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.ambassadors-card { grid-column: 1 / -1; min-height: 210px; }
+@media (max-width: 760px) {
+    .leadership-grid { grid-template-columns: 1fr; }
+    .ambassadors-card { grid-column: auto; }
+}
