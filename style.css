@@ -1265,3 +1265,34 @@ body {
     font-weight: 700;
     line-height: 1.35;
 }
+
+/* Paleta Aurora: substituir superfícies verdes por um gradiente boreal */
+:root {
+    --aurora-gradient: linear-gradient(120deg, #0b3040 0%, #087f83 34%, #3bbf9b 57%, #7167b4 82%, #18254d 100%);
+    --aurora-gradient-soft: linear-gradient(120deg, #e9f7f3 0%, #d9f0ee 42%, #e9e4f5 100%);
+    --aurora-deep: #102d46;
+    --aurora-teal: #138b88;
+}
+.home-page .nav-link-cta,
+.btn-green,
+.management-page .btn-green,
+.collections-page .milestone-card,
+.management-page .management-milestone,
+.project-page .project-card-accent,
+.ambassadors-card {
+    background: var(--aurora-gradient);
+}
+.flowers-page .section-purple,
+.collections-page .section-purple,
+.project-page .section-purple {
+    background: var(--aurora-gradient);
+}
+.site-footer { background: var(--aurora-gradient); }
+.collections-page .collection-hero,
+.management-page .management-intro,
+.home-leadership {
+    background: var(--aurora-gradient-soft);
+}
+.btn-purple:hover, .btn-green:hover { background: var(--aurora-gradient); border-color: transparent; }
+.home-page .nav-link.active, .home-page .nav-link:hover { color: var(--aurora-deep); }
+.section-tag, .leader-kicker, .leader-role, .collection-card-meta, .result-count { color: var(--aurora-teal); }
