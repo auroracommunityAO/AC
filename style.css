@@ -1256,3 +1256,12 @@ body {
         padding: 1rem;
     }
 }
+
+.leadership-grid .leader-role {
+    display: block;
+    margin-top: -0.25rem;
+    color: #4f8068;
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1.35;
+}
