@@ -1322,3 +1322,108 @@ img { display: block; }
     .pulse-ring { box-shadow: none; }
     :where(button, .btn, .home-button):active { transform: none; }
 }
+
+
+/* Acabamento visual Frosted / Clear / Blur — apenas superfícies e hierarquia */
+:root {
+    --glass-light: rgba(255, 255, 255, 0.78);
+    --glass-dark: rgba(10, 26, 42, 0.72);
+    --glass-border: rgba(255, 255, 255, 0.3);
+    --contrast-ink: #122333;
+    --contrast-muted: #51616d;
+}
+
+/* A barra mantém o mesmo componente em todas as páginas, agora com vidro legível. */
+.site-header.home-header {
+    background: var(--glass-light);
+    border-color: rgba(255, 255, 255, 0.62);
+    box-shadow: 0 14px 36px rgba(14, 43, 58, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.74);
+    -webkit-backdrop-filter: blur(20px) saturate(125%);
+    backdrop-filter: blur(20px) saturate(125%);
+}
+
+/* Superfícies translúcidas sem mudar dimensões, grelhas ou conteúdo. */
+.eco-card,
+.objectives-list li,
+.director-box,
+.collection-card,
+.management-milestone,
+.access-gate,
+.stat-card,
+.repository-panel,
+.file-editor-panel,
+.modal-dialog {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.035)), var(--glass-dark);
+    border-color: var(--glass-border);
+    box-shadow: 0 16px 34px rgba(4, 19, 32, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    -webkit-backdrop-filter: blur(16px) saturate(120%);
+    backdrop-filter: blur(16px) saturate(120%);
+}
+
+.collection-card:hover,
+.eco-card:hover,
+.repository-file:hover,
+.repository-file:focus-visible {
+    border-color: rgba(103, 232, 249, 0.62);
+    box-shadow: 0 18px 38px rgba(4, 19, 32, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+/* Hierarquia: títulos lideram, metadados orientam e descrições ficam secundárias. */
+:where(.hero-title, .section-title) {
+    text-wrap: balance;
+}
+
+:where(.hero-subtitle, .section-desc, .eco-text, .collection-card p, .leader-card p) {
+    max-width: 62ch;
+}
+
+.collection-card h3,
+.eco-title,
+.leader-card h3,
+.ambassadors-card h3 {
+    letter-spacing: -0.018em;
+}
+
+.collection-card-meta,
+.milestone-kicker,
+.section-tag,
+.leader-kicker,
+.result-count {
+    font-weight: 800;
+}
+
+/* Contraste explícito nas superfícies claras, sem alterar os fundos de imagem. */
+.home-leadership .section-title,
+.home-leadership .section-desc,
+.home-leadership .leader-card h3 {
+    color: var(--contrast-ink);
+}
+
+.home-leadership .section-desc,
+.home-leadership .leader-card p {
+    color: var(--contrast-muted);
+}
+
+/* Manter fallback sólido quando o navegador não suporta blur. */
+@supports not ((backdrop-filter: blur(1px))) {
+    .site-header.home-header { background: #f7faf8; }
+    .eco-card,
+    .objectives-list li,
+    .director-box,
+    .collection-card,
+    .management-milestone,
+    .access-gate,
+    .stat-card,
+    .repository-panel,
+    .file-editor-panel,
+    .modal-dialog { background: #122b3d; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .site-header.home-header,
+    .eco-card,
+    .collection-card,
+    .repository-panel,
+    .file-editor-panel,
+    .modal-dialog { -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
