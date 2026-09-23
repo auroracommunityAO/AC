@@ -77,13 +77,13 @@ function renderList() {
   const filtered = collections.filter((item) => (status === 'all' || item.status === status) && (!term || normalize(`${item.title} ${item.description} ${item.category} ${item.id}`).includes(term))).sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0) || a.title.localeCompare(b.title, 'pt'));
 
   if (!filtered.length) {
-    list.innerHTML = '<div class="empty-state compact"><span class="empty-state-mark">✦</span><h3>Nenhum registo encontrado.</h3><p>Ajuste o filtro ou crie uma nova coleção.</p></div>';
+    list.innerHTML = '<div class="empty-state compact"><h3>Nenhum registo encontrado.</h3><p>Ajuste o filtro ou crie uma nova coleção.</p></div>';
     return;
   }
 
   list.innerHTML = filtered.map((item) => `
     <article class="management-item ${item.status === 'archived' ? 'is-archived' : ''}">
-      <div class="management-item-cover">${item.cover ? `<img src="${escapeHtml(item.cover)}" alt="" loading="lazy">` : '<span>✦</span>'}</div>
+      <div class="management-item-cover">${item.cover ? `<img src="${escapeHtml(item.cover)}" alt="" loading="lazy">` : ''}</div>
       <div class="management-item-main"><div class="collection-card-meta"><span>${escapeHtml(item.category)}</span><span class="status-badge ${item.status}">${item.status === 'published' ? 'Publicada' : 'Arquivada'}</span></div><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.description)}</p><small>Actualizada em ${formatDate(item.updatedAt)}</small></div>
       <div class="management-item-actions"><button type="button" class="btn btn-quiet" data-edit="${escapeHtml(item.id)}">Editar</button><button type="button" class="btn btn-quiet" data-toggle="${escapeHtml(item.id)}">${item.status === 'published' ? 'Arquivar' : 'Publicar'}</button><button type="button" class="btn btn-danger" data-delete="${escapeHtml(item.id)}">Eliminar</button></div>
     </article>`).join('');

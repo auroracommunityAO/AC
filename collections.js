@@ -47,11 +47,11 @@ function renderCollections() {
   grid.innerHTML = filtered.map((collection) => {
     const cover = collection.cover
       ? `<img src="${escapeHtml(collection.cover)}" alt="Capa da coleção ${escapeHtml(collection.title)}" class="collection-card-cover" loading="lazy" decoding="async">`
-      : '<div class="collection-card-cover collection-card-cover-fallback" aria-hidden="true"><span>✦</span></div>';
+      : '<div class="collection-card-cover collection-card-cover-fallback" aria-hidden="true"></div>';
     const externalLink = collection.externalUrl
-      ? `<a href="${escapeHtml(collection.externalUrl)}" target="_blank" rel="noopener noreferrer" class="text-link">Ver coleção <span aria-hidden="true">↗</span></a>`
+      ? `<a href="${escapeHtml(collection.externalUrl)}" target="_blank" rel="noopener noreferrer" class="text-link">Ver coleção</a>`
       : '<span class="collection-card-status">Publicada pela Aurora</span>';
-    return `<article class="collection-card">${cover}<div class="collection-card-body"><div class="collection-card-meta"><span>${escapeHtml(collection.category || 'Coleção')}</span><span aria-hidden="true">✦</span></div><h3>${escapeHtml(collection.title)}</h3><p>${escapeHtml(collection.description)}</p><div class="collection-card-footer">${externalLink}</div></div></article>`;
+    return `<article class="collection-card">${cover}<div class="collection-card-body"><div class="collection-card-meta"><span>${escapeHtml(collection.category || 'Coleção')}</span></div><h3>${escapeHtml(collection.title)}</h3><p>${escapeHtml(collection.description)}</p><div class="collection-card-footer">${externalLink}</div></div></article>`;
   }).join('');
 
   const shouldShowEmpty = filtered.length === 0;
